@@ -11,8 +11,6 @@ from urllib.parse import urlparse
 
 app = Flask(__name__)
 
-logging.basicConfig(filename='record.log', level=logging.DEBUG, format=f'%(asctime)s %(levelname)s %(name)s %(threadName)s : %(message)s')
-
 url = urlparse(os.environ.get("REDIS_URL"))
 r = redis.Redis(host=url.hostname, port=url.port, username=url.username, password=url.password)
 
