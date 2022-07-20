@@ -26,7 +26,8 @@ def webhook():
                 "note": handle_comments
             }
             
-            switch[result.get("object_kind")](result) 
+            response = switch[result.get("object_kind")](result) 
+            return response
     except Exception as e:
         app.logger.error(f"Error log info: {e}")
         return jsonify({"status": 'error'}), 500
