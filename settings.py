@@ -7,3 +7,8 @@ class Config(object):
     SLACK_TIME = os.getenv('SLACK_TIME')
     SLACK_EMOJIS_SQUAD = os.getenv('SLACK_EMOJIS_SQUAD')
     REDIS_URL = os.getenv('REDIS_URL')
+    MESSAGE_OPEN_MR=os.getenv('MESSAGE_OPEN_MR')
+    MESSAGE_PIPELINE_ERROR=os.getenv('MESSAGE_PIPELINE_ERROR')
+    MESSAGE_MR_APPROVED=os.getenv('MESSAGE_MR_APPROVED')
+    MESSAGE_COMMENTS=os.getenv('MESSAGE_COMMENTS')
+    SLACK_IMAGE_MR =  os.getenv('SLACK_IMAGE_MR')

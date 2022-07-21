@@ -3,7 +3,6 @@ import json
 import requests
 import redis
 import constants
-import logging
 from flask import Flask
 from flask import request, jsonify
 from settings import Config
@@ -33,33 +32,36 @@ def webhook():
         return jsonify({"status": 'error'}), 500
 
 def handle_event_merge_request(result):
-    if result['object_attributes'].get('action') in ['close', 'reopen', 'approved', 'unapproved', 'unapproved', 'approval', 'unapproval', 'merge']:
+    if result['object_attributes'].get('work_in_progress') is True:
+        return {}
+    elif result['object_attributes'].get('action') == 'update':
+        if result['changes']['title']['previous'].find('Draft:') != -1:
+             return post_message(result)
+    elif result['object_attributes'].get('action') in ['close', 'reopen', 'approved', 'unapproved', 'unapproved', 'approval', 'unapproval', 'merge']:
         if result['object_attributes']['action'] == 'merge':
             r.delete(f'merge_request_{result["object_attributes"]["id"]}')
         return {}
-    
-    if {i['id'] for i in result.get('labels') if i['title'] == 'approved'} or result['object_attributes'].get('approved'):
+    elif {i['id'] for i in result.get('labels') if i['title'] == 'approved'} or result['object_attributes'].get('approved'):
         ts = r.get(f'merge_request_{result["object_attributes"]["id"]}')
-        
         return request_post_message(
-            text=constants.MESSAGE_MR_APPROVED,
+            text=Config.MESSAGE_MR_APPROVED,
             ts=ts
         )
-
-    return post_message(result)
+    else:
+        return post_message(result)
 
 def handle_status_pipeline(result):
     ts = r.get(f'merge_request_{result["merge_request"]["id"]}')
     if result['object_attributes']['status'] == 'failed':
         return request_post_message(
-            text=constants.MESSAGE_PIPELINE_ERROR,
+            text=Config.MESSAGE_PIPELINE_ERROR,
             ts=ts
         )
 
 def handle_comments(result):
     ts = r.get(f'merge_request_{result["merge_request"]["id"]}')
     return request_post_message(
-            text=constants.MESSAGE_COMMENTS,
+            text=Config.MESSAGE_COMMENTS,
             ts=ts
         )
 
@@ -68,7 +70,7 @@ def post_message(result):
     object_attributes = result["object_attributes"]
     project_name=result["project"]["description"]
     username=result["user"]["username"]
-    avatar=result["user"]["avatar_url"]
+    avatar=Config.SLACK_IMAGE_MR
     branch_title=object_attributes["title"]
     branch_url=object_attributes["url"]
     source_branch=object_attributes["source_branch"]
@@ -76,13 +78,13 @@ def post_message(result):
 
     attachments=[
         {
-            "color": "#3AA3E3",
+            "color": constants.COLOR,
             "blocks": [
                 {
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": constants.MESSAGE_OPEN_MR.format(slack_squad=Config.SLACK_TIME)
+                        "text": Config.MESSAGE_OPEN_MR.format(slack_squad=Config.SLACK_TIME)
                     }
                 },
                 {
@@ -105,7 +107,7 @@ def post_message(result):
                     "elements": [
                         {
                             "type": "mrkdwn",
-                            "text": "*Squad: *"
+                            "text": "*Gangue: *"
                         },
                         {
                             "type": "mrkdwn",
